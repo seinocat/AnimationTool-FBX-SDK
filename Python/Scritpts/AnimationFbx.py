@@ -1,14 +1,25 @@
-from decimal import Decimal
 from FBXClass import *
-
 
 def doAnimOptimize(fbxFile:FBX_Class):
 
     rAnimStack:FbxAnimStack = fbxFile.scene.GetCurrentAnimationStack()
+    print(rAnimStack.GetName())
+    Docu:FbxDocument = rAnimStack.GetDocument()
+    Docu.RemoveAnimStack(rAnimStack.GetName())
+
     nLayerCount = rAnimStack.GetSrcObjectCount(FbxCriteria.ObjectType(FbxAnimLayer.ClassId))
 
-    for j in range(nLayerCount):
-        rAnimLayer = rAnimStack.GetSrcObject(FbxCriteria.ObjectType(FbxAnimLayer.ClassId), j)
+    for i in range(nLayerCount):
+        rAnimLayer = rAnimStack.GetSrcObject(FbxCriteria.ObjectType(FbxAnimLayer.ClassId), i)
+        animCurveNodeCount = rAnimLayer.GetSrcObjectCount(FbxCriteria.ObjectType(FbxAnimCurveNode.ClassId))
+        print(animCurveNodeCount)
+
+
+        for j in range(animCurveNodeCount):
+            animCurveNode = rAnimLayer.GetSrcObject(FbxCriteria.ObjectType(FbxAnimCurveNode.ClassId), j)
+            douc:FbxDocument = animCurveNode.GetDocument()
+            # print(douc.RemoveAnimStack())
+            # print(animCurveNode.GetSrcObjectCount(FbxCriteria.ObjectType())
 
         # 遍历所有节点，修改曲线
         for k in range(fbxFile.scene.GetNodeCount()):
@@ -32,20 +43,22 @@ def doAnimOptimize(fbxFile:FBX_Class):
 
 
 def GetCurve(node, animaLayer, type, channel):
-    FbxAnimCurveNode = None
+    TempFbxAnimCurveNode = None
     if type == 0:
-        FbxAnimCurveNode = node.LclTranslation
+        TempFbxAnimCurveNode = node.LclTranslation
     if type == 1:
-        FbxAnimCurveNode = node.LclRotation
+        TempFbxAnimCurveNode = node.LclRotation
     if type == 2:
-        FbxAnimCurveNode = node.LclScaling
+        TempFbxAnimCurveNode = node.LclScaling
 
-    rAnimCurve: FbxAnimCurve = FbxAnimCurveNode.GetCurve(animaLayer, channel)
+    rAnimCurve: FbxAnimCurve = TempFbxAnimCurveNode.GetCurve(animaLayer, channel)
+
+
+
     return rAnimCurve
 
 
 def SetCurve(curve:FbxAnimCurve):
-
     for i in range(curve.KeyGetCount()):
         curve.KeyModifyBegin()
         keyValue = curve.KeyGetValue(i)
@@ -54,6 +67,11 @@ def SetCurve(curve:FbxAnimCurve):
             newValue = 0
         curve.KeySetValue(i, newValue)
         curve.KeyModifyEnd()
-        print(curve.KeyGetValue(i))
+    return 0
+
+def DelScaleCurve(node:FbxNode):
+
+    node.LclScaling
+
     return 0
 
