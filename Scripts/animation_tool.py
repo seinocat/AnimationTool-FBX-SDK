@@ -1,45 +1,50 @@
 from fbxclass import *
 
+channels = {"X", "Y", "Z"}
+
 def optimize_animation(fbxFile:FbxClass):
     anima_stack:FbxAnimStack = fbxFile.scene.GetCurrentAnimationStack()
     if anima_stack == None:
         print("Fbx file is None!")
         return
 
-    layer_count = anima_stack.GetSrcObjectCount(FbxCriteria.ObjectType(FbxAnimLayer.ClassId))
+    layer_count = anima_stack.GetMemberCount()
 
     for i in range(layer_count):
-        anim_layer = anima_stack.GetSrcObject(FbxCriteria.ObjectType(FbxAnimLayer.ClassId), i)
-        anim_curve_count = anim_layer.GetSrcObjectCount(FbxCriteria.ObjectType(FbxAnimCurveNode.ClassId))
-        print(anim_curve_count)
+        anim_layer:FbxAnimLayer = anima_stack.GetMember(i)
+        anim_curve_count = anim_layer.GetMemberCount(FbxCriteria.ObjectType(FbxAnimCurveNode.ClassId))
+        print("fbxFile:" + fbxFile.filename + ",curve:" + str(anim_curve_count))
 
         # 遍历所有节点，修改曲线
-        for j in range(fbxFile.scene.GetNodeCount()):
+        node_count = fbxFile.scene.GetNodeCount()
+        for j in range(node_count):
             node:FbxNode = fbxFile.scene.GetNode(j)
 
-            channels = {"X", "Y", "Z"}
-            #先进行精度优化
-            for channel in channels:
-                curve = get_curve(node, anim_layer, channel)
-                if curve is not None:
-                    set_curve(channel)
+            if node is None:
+                continue
 
+            #先进行精度优化
+
+            for lcl_type in range(1):
+                for channel in channels:
+                    curve = get_curve(node, anim_layer, lcl_type, channel)
+                    if curve is not None:
+                        set_curve(curve)
             #检查scale曲线
             del_scale_curve(node, anim_layer)
 
     fbxFile.save()
 
 
-def get_curve(node, anima_layer, channel):
+def get_curve(node, anima_layer, lcl_type, channel):
     curve = None
-    if channel == "X":
-        curve = node.LclTranslation
-    if channel == "Y":
-        curve = node.LclRotation
-    if channel == "Z":
-        curve = node.LclScaling
-    anim_curve: FbxAnimCurve = curve.GetCurve(anima_layer, channel)
-    return anim_curve
+    if lcl_type == 0:
+        curve = node.LclTranslation.GetCurve(anima_layer, channel)
+    if lcl_type == 1:
+        curve = node.LclRotation.GetCurve(anima_layer, channel)
+    if lcl_type == 2:
+        curve = node.LclScaling.GetCurve(anima_layer, channel)
+    return curve
 
 #精度优化，默认保留三位小数点
 def set_curve(curve:FbxAnimCurve, decimal_places: int = 3):
@@ -50,19 +55,24 @@ def set_curve(curve:FbxAnimCurve, decimal_places: int = 3):
         newValue = round(keyValue, decimal_places)
         if abs(newValue) == 0:
             newValue = 0
-        curve.KeySetValue(i, newValue)
+        curve.KeySetValue(i, 0.5)
         curve.KeyModifyEnd()
 
 #删除scale曲线
 def del_scale_curve(node:FbxNode, anim_layer):
     scale_curve = node.LclScaling
-    key_count = scale_curve.KeyGetCount()
+    anim_curve: FbxAnimCurve = scale_curve.GetCurve(anim_layer, "Z")
+
+    if anim_curve is None:
+        return
+
+    key_count = anim_curve.KeyGetCount()
 
     #检查一下scale曲线，没有用到才删除
     for i in range(key_count):
-        keyValue = scale_curve.KeyGetValue(i)
+        keyValue = anim_curve.KeyGetValue(i)
         if keyValue != 1:
             return
 
-    node.LclScaling.SetCurve(anim_layer, None)
+    anim_layer.DisconnectSrcProperty(scale_curve)
 
