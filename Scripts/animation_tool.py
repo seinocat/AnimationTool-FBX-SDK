@@ -6,10 +6,6 @@ def optimize_animation(fbxFile:FbxClass):
         print("Fbx file is None!")
         return
 
-    print(anima_stack.GetName())
-    doc:FbxDocument = anima_stack.GetDocument()
-    doc.RemoveAnimStack(anima_stack.GetName())
-
     layer_count = anima_stack.GetSrcObjectCount(FbxCriteria.ObjectType(FbxAnimLayer.ClassId))
 
     for i in range(layer_count):
