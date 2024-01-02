@@ -3,7 +3,7 @@ import FbxCommon
 import time
 from fbx import *
 
-class FBX_Class(object):
+class FbxClass(object):
 
     def __init__(self, filename):
         """
