@@ -23,14 +23,12 @@ def optimize_animation(fbxFile:FbxClass):
             if node is None:
                 continue
 
-            #先进行精度优化
+            #精度优化
             for lcl_type in range(3):
                 for channel in channels:
                     curve = get_curve(node, anim_layer, lcl_type, channel)
                     if curve is not None:
                         set_curve(curve)
-            #检查scale曲线
-            del_scale_curve(node, anim_layer)
 
     fbxFile.save()
 
@@ -53,7 +51,7 @@ def set_curve(curve:FbxAnimCurve):
         curve.KeySetValue(i, round(curve.KeyGetValue(i), 1))
         curve.KeyModifyEnd()
 
-#删除scale曲线
+#弃用，删除scale曲线
 def del_scale_curve(node:FbxNode, anim_layer):
     scale_curve = node.LclScaling
 
