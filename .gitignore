@@ -70,4 +70,4 @@ crashlytics-build.properties
 UnityPackageManager/manifest.json
 /Action_UPM_Rebuild.bat
 /Action_UPM_Push.bat
-/Scripts/__pycache__
+/Scripts/Python/__pycache__
