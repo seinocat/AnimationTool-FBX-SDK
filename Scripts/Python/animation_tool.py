@@ -12,8 +12,6 @@ def optimize_animation(fbxFile:FbxClass):
 
     for i in range(layer_count):
         anim_layer:FbxAnimLayer = anima_stack.GetMember(i)
-        anim_curve_count = anim_layer.GetMemberCount(FbxCriteria.ObjectType(FbxAnimCurveNode.ClassId))
-        print("fbxFile:" + fbxFile.filename + ",curve:" + str(anim_curve_count))
 
         # 遍历所有节点，修改曲线
         node_count = fbxFile.scene.GetNodeCount()
@@ -51,7 +49,8 @@ def set_curve(curve:FbxAnimCurve):
         curve.KeySetValue(i, round(curve.KeyGetValue(i), 1))
         curve.KeyModifyEnd()
 
-#弃用，删除scale曲线
+#删除scale曲线
+#弃用，Unity导入时默认创建Scale曲线，这里删除没有意义
 def del_scale_curve(node:FbxNode, anim_layer):
     scale_curve = node.LclScaling
 
@@ -60,11 +59,12 @@ def del_scale_curve(node:FbxNode, anim_layer):
         if anim_curve is None:
             continue
         key_count = anim_curve.KeyGetCount()
-        # # 检查一下scale所有通道，没有用到才删除
-        # for i in range(key_count):
-        #     keyValue = anim_curve.KeyGetValue(i)
-        #     if keyValue != 1:
-        #         return
+        # 检查一下scale所有通道，没有用到才删除
+        for i in range(key_count):
+            keyValue = anim_curve.KeyGetValue(i)
+            if keyValue != 1:
+                return
 
     anim_layer.DisconnectSrcProperty(node.LclScaling)
+    node.DisconnectSrcProperty(node.LclScaling)
 
